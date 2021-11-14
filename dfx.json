@@ -1,7 +1,7 @@
 {
   "canisters": {
     "file_uploader": {
-      "main": "src/file_uploader/main.mo",
+      "main": "src/file_uploader/fileUploader.mo",
       "type": "motoko"
     },
     "file_uploader_assets": {

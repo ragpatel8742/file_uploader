@@ -1,0 +1,10 @@
+type Result = 
+ variant {
+   err: Error;
+   ok: blob;
+ };
+type Error = variant {NotFound;};
+service : {
+  downloadFile: (text) -> (Result);
+  saveFile: (text, blob) -> (bool);
+}
