@@ -1,34 +1,36 @@
+import Types "./Types";
 import TrieMap "mo:base/TrieMap";
 import Hash "mo:base/Hash";
 import Result "mo:base/Result";
 import Text "mo:base/Text";
 import Debug "mo:base/Debug";
-import Blob "mo:base/Blob";
+import Nat8 "mo:base/Nat8";
 
 actor FileDataBase {
     
+    public type FileId = Types.FileId;
+    public type FileData = Types.FileData;
+    public type StorageType = Types.StorageType;
+
     private func isEqualFileId(fileId1 : FileId, fileId2 : FileId) : Bool{
-        fileId1.name == fileId2.name
+        fileId1.fileName == fileId2.fileName
     };
 
     private func hashOfFileId(fileId : FileId) : Hash.Hash {
-        Text.hash(fileId.name);
+        Text.hash(fileId.fileName)
     };
 
-    type FileId = {
-        name: Text;
-    };
-
-    type Error = {
-        #NotFound;
-    };
-
-    var Files : TrieMap.TrieMap<FileId, Blob> = TrieMap.TrieMap<FileId, Blob>(isEqualFileId, hashOfFileId);
+    var Files : TrieMap.TrieMap<FileId, FileData> = TrieMap.TrieMap<FileId, FileData>(isEqualFileId, hashOfFileId);
     
-    public func saveFile(fileName : Text, fileData : Blob) : async Bool {
+    public func saveFile(fileName_ : Text, fileType_ : Text, data_ : StorageType) : async Bool {
         
         let fileId : FileId = {
-            name = fileName;
+            fileName = fileName_;
+        };
+
+        let fileData : FileData = {
+            fileType = fileType_;
+            data = data_;
         };
         
         if(isNewFile(fileId)) {
@@ -39,13 +41,23 @@ actor FileDataBase {
         return false;
     };
     
-    public func downloadFile(fileName : Text) : async Result.Result<Blob, Error> {
+    public func downloadFile(fileName_ : Text) : async ?FileData {
 
         let fileId : FileId = {
-            name = fileName;
+            fileName = fileName_;
+        };
+
+        let fileData = Files.get(fileId);
+
+        switch(fileData) {
+            case(null) {
+                return null;
+            };
+            case(?fileData) {
+                return ?fileData;
+            };
         };
         
-        return Result.fromOption(Files.get(fileId), #NotFound);
     };
 
     private func isNewFile(fileId : FileId) : Bool {
@@ -56,7 +68,7 @@ actor FileDataBase {
             case(null) {
                 return true;
             };
-            case(fileId) {
+            case(?result) {
                 return false;
             };
         };
