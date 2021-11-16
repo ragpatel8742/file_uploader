@@ -1,13 +1,19 @@
 module { 
 
+    public type FileId = Text;
     public type StorageType = [Nat8];
+    public type ChunkId = Text;
 
-    public type FileId = {
+    public type FileInfo = {
+        fileId: FileId;
         fileName: Text;
+        fileType: Text;
+        chunkCount: Nat;
     };
 
-    public type FileData = {
-        fileType: Text;
+    public type ChunkData = {
+        fileId: FileId;
+        chunkNumber: Nat;
         data: StorageType;
     };
 

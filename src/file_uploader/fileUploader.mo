@@ -1,69 +1,25 @@
 import Types "./Types";
 import TrieMap "mo:base/TrieMap";
 import Hash "mo:base/Hash";
-import Result "mo:base/Result";
 import Text "mo:base/Text";
+import Nat "mo:base/Nat";
 import Debug "mo:base/Debug";
 import Nat8 "mo:base/Nat8";
 
 actor FileDataBase {
     
     public type FileId = Types.FileId;
-    public type FileData = Types.FileData;
+    public type FileInfo = Types.FileInfo;
+    public type ChunkData = Types.ChunkData;
+    public type ChunkId = Types.ChunkId;
     public type StorageType = Types.StorageType;
 
-    private func isEqualFileId(fileId1 : FileId, fileId2 : FileId) : Bool{
-        fileId1.fileName == fileId2.fileName
-    };
+    var FileInfo : TrieMap.TrieMap<FileId, FileInfo> = TrieMap.TrieMap<FileId, FileInfo>(Text.equal, Text.hash);
+    var FileData : TrieMap.TrieMap<ChunkId, ChunkData> = TrieMap.TrieMap<ChunkId, ChunkData>(Text.equal, Text.hash);
 
-    private func hashOfFileId(fileId : FileId) : Hash.Hash {
-        Text.hash(fileId.fileName)
-    };
-
-    var Files : TrieMap.TrieMap<FileId, FileData> = TrieMap.TrieMap<FileId, FileData>(isEqualFileId, hashOfFileId);
-    
-    public func saveFile(fileName_ : Text, fileType_ : Text, data_ : StorageType) : async Bool {
+    public func isNewFile(fileId : FileId) : async Bool {
         
-        let fileId : FileId = {
-            fileName = fileName_;
-        };
-
-        let fileData : FileData = {
-            fileType = fileType_;
-            data = data_;
-        };
-        
-        if(isNewFile(fileId)) {
-            Files.put(fileId, fileData);
-            return true;
-        };
-
-        return false;
-    };
-    
-    public func downloadFile(fileName_ : Text) : async ?FileData {
-
-        let fileId : FileId = {
-            fileName = fileName_;
-        };
-
-        let fileData = Files.get(fileId);
-
-        switch(fileData) {
-            case(null) {
-                return null;
-            };
-            case(?fileData) {
-                return ?fileData;
-            };
-        };
-        
-    };
-
-    private func isNewFile(fileId : FileId) : Bool {
-        
-        let result = Files.get(fileId);
-
+        let result = FileInfo.get(fileId);
         switch(result) {
             case(null) {
                 return true;
@@ -72,6 +28,44 @@ actor FileDataBase {
                 return false;
             };
         };
+    };
+
+    public func saveFileInfo(fileName_ : Text, fileType_ : Text, chunkCount_ : Nat) : async Bool {
+        
+        let fileInfo : FileInfo = {
+            fileId = fileName_;
+            fileName = fileName_;
+            fileType = fileType_;
+            chunkCount = chunkCount_;
+        };
+        FileInfo.put(fileName_, fileInfo);
+        return true; 
+    };
+    
+    public func saveChunkData(fileName_ : Text, chunkNumber_ : Nat, data_ : StorageType) : async Bool {
+        
+        let chunkData : ChunkData = {
+            fileId = fileName_;
+            chunkNumber = chunkNumber_;
+            data = data_;
+        };
+        FileData.put(getChunkId(fileName_, chunkNumber_), chunkData);
+        return true;
+    };
+
+    public func downloadFileInfo(fileName : Text) : async ?FileInfo {
+
+        return FileInfo.get(fileName);
+    };
+
+    public func downloadChunkData(fileName : Text, chunkNumber : Nat) : async ?ChunkData {
+
+        return FileData.get(getChunkId(fileName, chunkNumber));
+    };
+
+    private func getChunkId(fileName : Text, chunkNumber : Nat) : Text {
+        
+        return fileName # "_" # Nat.toText(chunkNumber);
     };
 
 }

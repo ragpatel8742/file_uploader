@@ -1,11 +1,24 @@
 type StorageType__1 = vec nat8;
 type StorageType = vec nat8;
-type FileData = 
+type FileInfo = 
  record {
-   data: StorageType__1;
+   chunkCount: nat;
+   fileId: FileId__1;
+   fileName: text;
    fileType: text;
  };
+type FileId__1 = text;
+type FileId = text;
+type ChunkData = 
+ record {
+   chunkNumber: nat;
+   data: StorageType__1;
+   fileId: FileId__1;
+ };
 service : {
-  downloadFile: (text) -> (opt FileData);
-  saveFile: (text, text, StorageType) -> (bool);
+  downloadChunkData: (text, nat) -> (opt ChunkData);
+  downloadFileInfo: (text) -> (opt FileInfo);
+  isNewFile: (FileId) -> (bool);
+  saveChunkData: (text, nat, StorageType) -> (bool);
+  saveFileInfo: (text, text, nat) -> (bool);
 }
