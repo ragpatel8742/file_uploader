@@ -2,11 +2,16 @@ import { file_uploader } from "../../declarations/file_uploader";
 const MAX_CHUNK_SIZE = 1024 * 500;
 
 function saveByteArray(fileName, byteArray, fileType) {
-  var blob = new Blob(byteArray, { type: fileType });
-  var link = document.createElement('a');
-  link.href = window.URL.createObjectURL(blob);
-  link.download = fileName;
-  link.click();
+  const blob = new Blob(byteArray, { type: fileType });
+  const downloadFile = document.createElement('a');
+  const objectUrl = window.URL.createObjectURL(blob);
+  downloadFile.href = objectUrl;
+  downloadFile.download = fileName;
+  downloadFile.click();
+  if(fileType.startsWith("image")) {
+    const viewImage = document.getElementById("viewImage");
+    viewImage.src = objectUrl;
+  }
 };
 
 document.getElementById("uploadFile").addEventListener("change", async() => {
@@ -14,13 +19,15 @@ document.getElementById("uploadFile").addEventListener("change", async() => {
   const fileName = file.name;
   const fileType = file.type;
 
-  var isNewFile = await file_uploader.isNewFile(fileName);
-  if(isNewFile) {
-    await saveFile(file, fileName, fileType);
-    window.alert("Your file named '" + fileName + "' uploaded successfully!");
-  } else {
-    window.alert("A file named '" + fileName + "' already exist!"); 
-  }
+  document.getElementById("uploadButton").addEventListener("click", async() => {
+    const isNewFile = await file_uploader.isNewFile(fileName);
+    if(isNewFile) {
+      await saveFile(file, fileName, fileType);
+      window.alert("Your file named '" + fileName + "' uploaded successfully!");
+    } else {
+      window.alert("A file named '" + fileName + "' already exist!"); 
+    }
+  });
 });
 
 async function saveFile(file, fileName, fileType) {
